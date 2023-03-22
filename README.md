@@ -1,0 +1,3 @@
+ldgoappender
+
+Logdoc Go Appender
