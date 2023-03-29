@@ -1,4 +1,4 @@
-NAME=ldgoappender
+NAME=logdoc-go-appender
 GOFLAGS=-buildmode=plugin
 
 all: $(NAME).so
