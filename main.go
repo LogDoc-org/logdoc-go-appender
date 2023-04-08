@@ -56,7 +56,7 @@ func (h *Hook) Levels() []logrus.Level {
 	}
 }
 
-/// Fire send message to logdoc.
+// / Fire send message to logdoc.
 // In async mode log message will be dropped if message buffer is full.
 // If you want wait until message buffer frees – set WaitUntilBufferFrees to true.
 func (h *Hook) Fire(entry *logrus.Entry) error {
@@ -115,7 +115,7 @@ func (h *Hook) sendMessage(entry *logrus.Entry) error {
 	return nil
 }
 
-func Init() net.Conn {
+func Init(proto string, address string) net.Conn {
 	l := logrus.New()
 	l.SetReportCaller(true)
 	l.Formatter = &logrus.TextFormatter{
@@ -127,7 +127,7 @@ func Init() net.Conn {
 		FullTimestamp: true,
 	}
 
-	hook, conn, err := NewHook("tcp", "127.0.0.1:5656")
+	hook, conn, err := NewHook(proto, address)
 	if err != nil {
 		log.Fatal(err)
 	}
