@@ -1,3 +1,3 @@
 logdoc-go-appender
 
-Logdoc Go Appender v0.1.0
+Logdoc Go Appender v0.0.1
