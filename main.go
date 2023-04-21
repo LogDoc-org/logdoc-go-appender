@@ -116,7 +116,7 @@ func (h *Hook) sendMessage(entry *logrus.Entry) error {
 	return nil
 }
 
-func Init(proto string, address string, app string) net.Conn {
+func Init(proto string, address string, app string) (net.Conn, error) {
 	l := logrus.New()
 	l.SetReportCaller(true)
 	l.Formatter = &logrus.TextFormatter{
@@ -131,6 +131,7 @@ func Init(proto string, address string, app string) net.Conn {
 	hook, conn, err := NewHook(proto, address)
 	if err != nil {
 		logrus.Error(err)
+		return nil, err
 	}
 
 	l.AddHook(hook)
@@ -141,13 +142,14 @@ func Init(proto string, address string, app string) net.Conn {
 
 	application = app
 
-	return conn
+	return conn, nil
 }
 
 func NewHook(protocol, address string) (*Hook, net.Conn, error) {
 	conn, err := net.Dial(protocol, address)
 	if err != nil {
-		logrus.Error(err)
+		logrus.Error("Error connecting LogDoc server, ", address, err)
+		return nil, nil, err
 	}
 
 	hook := &Hook{conn: conn, protocol: protocol, address: address}
