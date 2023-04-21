@@ -16,14 +16,17 @@ import (
 
 const defaultAsyncBufferSize = 8192
 
+var application string
+
 var e *logrus.Entry
 
 type Logger struct {
-	*logrus.Entry
+	Application string
+	Entry       *logrus.Entry
 }
 
 func GetLogger() Logger {
-	return Logger{e}
+	return Logger{Application: application, Entry: e}
 }
 
 type Hook struct {
@@ -77,16 +80,16 @@ func (h *Hook) Fire(entry *logrus.Entry) error {
 
 func (h *Hook) sendMessage(entry *logrus.Entry) error {
 	header := []byte{6, 3}
-	app := "go-appender"
-	lvl := ""
+	app := application
+	var lvl string
 	if strings.Compare(entry.Level.String(), "warning") == 0 {
 		lvl = "warn"
 	} else {
 		lvl = entry.Level.String()
 	}
-	ip := "127.0.0.1"
+	ip := h.conn.RemoteAddr().String()
 	pid := fmt.Sprintf("%d", os.Getpid())
-	src := "local"
+	src := "source"
 
 	t := time.Now()
 	tsrc := t.Format("060201150405.000") + "\n"
@@ -115,7 +118,7 @@ func (h *Hook) sendMessage(entry *logrus.Entry) error {
 	return nil
 }
 
-func Init(proto string, address string) net.Conn {
+func Init(proto string, address string, app string) net.Conn {
 	l := logrus.New()
 	l.SetReportCaller(true)
 	l.Formatter = &logrus.TextFormatter{
@@ -138,11 +141,12 @@ func Init(proto string, address string) net.Conn {
 
 	e = logrus.NewEntry(l)
 
+	application = app
+
 	return conn
 }
 
 func NewHook(protocol, address string) (*Hook, net.Conn, error) {
-
 	conn, err := net.Dial(protocol, address)
 	if err != nil {
 		log.Fatal(err)
