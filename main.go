@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/sirupsen/logrus"
-	"log"
 	"net"
 	"os"
 	"path"
@@ -21,12 +20,11 @@ var application string
 var e *logrus.Entry
 
 type Logger struct {
-	Application string
-	Entry       *logrus.Entry
+	Entry *logrus.Entry
 }
 
 func GetLogger() Logger {
-	return Logger{Application: application, Entry: e}
+	return Logger{e}
 }
 
 type Hook struct {
@@ -113,7 +111,7 @@ func (h *Hook) sendMessage(entry *logrus.Entry) error {
 
 	_, err := h.conn.Write(result)
 	if err != nil {
-		log.Fatal(err)
+		logrus.Errorf("Ошибка записи в соединение, %s", err.Error())
 	}
 	return nil
 }
@@ -132,7 +130,7 @@ func Init(proto string, address string, app string) net.Conn {
 
 	hook, conn, err := NewHook(proto, address)
 	if err != nil {
-		log.Fatal(err)
+		logrus.Error(err)
 	}
 
 	l.AddHook(hook)
@@ -149,7 +147,7 @@ func Init(proto string, address string, app string) net.Conn {
 func NewHook(protocol, address string) (*Hook, net.Conn, error) {
 	conn, err := net.Dial(protocol, address)
 	if err != nil {
-		log.Fatal(err)
+		logrus.Error(err)
 	}
 
 	hook := &Hook{conn: conn, protocol: protocol, address: address}
