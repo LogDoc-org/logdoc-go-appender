@@ -17,14 +17,10 @@ const defaultAsyncBufferSize = 8192
 
 var application string
 
-var e *logrus.Entry
+var lgr *logrus.Logger
 
-type Logger struct {
-	Entry *logrus.Entry
-}
-
-func GetLogger() Logger {
-	return Logger{e}
+func GetLogger() *logrus.Logger {
+	return lgr
 }
 
 type Hook struct {
@@ -116,7 +112,7 @@ func (h *Hook) sendMessage(entry *logrus.Entry) error {
 	return nil
 }
 
-func Init(proto string, address string, app string) (net.Conn, *logrus.Logger, error) {
+func Init(proto string, address string, app string) (net.Conn, error) {
 	l := logrus.New()
 	l.SetReportCaller(true)
 	l.Formatter = &logrus.TextFormatter{
@@ -131,18 +127,18 @@ func Init(proto string, address string, app string) (net.Conn, *logrus.Logger, e
 	hook, conn, err := NewHook(proto, address)
 	if err != nil {
 		logrus.Error(err)
-		return nil, l, err
+		return nil, err
 	}
 
 	l.AddHook(hook)
 
 	l.SetLevel(logrus.DebugLevel)
 
-	e = logrus.NewEntry(l)
+	lgr = l
 
 	application = app
 
-	return conn, l, nil
+	return conn, nil
 }
 
 func NewHook(protocol, address string) (*Hook, net.Conn, error) {
