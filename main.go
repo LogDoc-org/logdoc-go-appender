@@ -221,3 +221,13 @@ func writeInt(in int) []byte {
 	buf.WriteByte(byte(in & 0xff))
 	return buf.Bytes()
 }
+
+func GetSourceName(pc uintptr, file string, line int, ok bool) string {
+	// in skip if we're using 1, so it will actually log the where the error happened, 0 = this function
+	return file[strings.LastIndex(file, "/")+1:]
+}
+
+func GetSourceLineNum(pc uintptr, file string, line int, ok bool) int {
+	// in skip if we're using 1, so it will actually log the where the error happened, 0 = this function
+	return line
+}
