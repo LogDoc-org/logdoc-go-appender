@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -83,7 +84,7 @@ func (h *Hook) sendMessage(entry *logrus.Entry) error {
 	}
 	ip := h.conn.RemoteAddr().String()
 	pid := fmt.Sprintf("%d", os.Getpid())
-	src := "source"
+	src := entry.Caller.Function + ":" + strconv.Itoa(entry.Caller.Line)
 
 	t := time.Now()
 	tsrc := t.Format("060201150405.000") + "\n"
