@@ -126,16 +126,18 @@ func Init(proto string, address string, app string) (net.Conn, error) {
 	}
 
 	l.SetLevel(logrus.DebugLevel)
-
 	application = app
 	lgr = l
 
 	hook, conn, err := NewHook(proto, address)
 	if err != nil {
 		l = logrus.StandardLogger()
-		l.Error(err)
+		l.SetLevel(logrus.DebugLevel)
+		lgr = l
+		lgr.Error(err)
 		return nil, err
 	}
+
 	l.AddHook(hook)
 	return conn, nil
 }
