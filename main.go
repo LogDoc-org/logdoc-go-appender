@@ -125,20 +125,18 @@ func Init(proto string, address string, app string) (net.Conn, error) {
 		FullTimestamp: true,
 	}
 
-	hook, conn, err := NewHook(proto, address)
-	if err != nil {
-		logrus.Error(err)
-		return nil, err
-	}
-
-	l.AddHook(hook)
-
 	l.SetLevel(logrus.DebugLevel)
 
+	application = app
 	lgr = l
 
-	application = app
-
+	hook, conn, err := NewHook(proto, address)
+	if err != nil {
+		l = logrus.StandardLogger()
+		l.Error(err)
+		return nil, err
+	}
+	l.AddHook(hook)
 	return conn, nil
 }
 
