@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/sirupsen/logrus"
-	"log"
 	"net"
 	"os"
 	"path"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -16,14 +16,12 @@ import (
 
 const defaultAsyncBufferSize = 8192
 
-var e *logrus.Entry
+var application string
 
-type Logger struct {
-	*logrus.Entry
-}
+var lgr *logrus.Logger
 
-func GetLogger() Logger {
-	return Logger{e}
+func GetLogger() *logrus.Logger {
+	return lgr
 }
 
 type Hook struct {
@@ -77,16 +75,16 @@ func (h *Hook) Fire(entry *logrus.Entry) error {
 
 func (h *Hook) sendMessage(entry *logrus.Entry) error {
 	header := []byte{6, 3}
-	app := "go-appender"
-	lvl := ""
+	app := application
+	var lvl string
 	if strings.Compare(entry.Level.String(), "warning") == 0 {
 		lvl = "warn"
 	} else {
 		lvl = entry.Level.String()
 	}
-	ip := "127.0.0.1"
+	ip := h.conn.RemoteAddr().String()
 	pid := fmt.Sprintf("%d", os.Getpid())
-	src := "local"
+	src := entry.Caller.Function + ":" + strconv.Itoa(entry.Caller.Line)
 
 	t := time.Now()
 	tsrc := t.Format("060201150405.000") + "\n"
@@ -110,12 +108,12 @@ func (h *Hook) sendMessage(entry *logrus.Entry) error {
 
 	_, err := h.conn.Write(result)
 	if err != nil {
-		log.Fatal(err)
+		logrus.Errorf("Ошибка записи в соединение, %s", err.Error())
 	}
 	return nil
 }
 
-func Init(proto string, address string) net.Conn {
+func Init(proto string, address string, app string) (net.Conn, error) {
 	l := logrus.New()
 	l.SetReportCaller(true)
 	l.Formatter = &logrus.TextFormatter{
@@ -127,25 +125,28 @@ func Init(proto string, address string) net.Conn {
 		FullTimestamp: true,
 	}
 
+	l.SetLevel(logrus.DebugLevel)
+	application = app
+	lgr = l
+
 	hook, conn, err := NewHook(proto, address)
 	if err != nil {
-		log.Fatal(err)
+		l = logrus.StandardLogger()
+		l.SetLevel(logrus.DebugLevel)
+		lgr = l
+		lgr.Error(err)
+		return nil, err
 	}
 
 	l.AddHook(hook)
-
-	l.SetLevel(logrus.DebugLevel)
-
-	e = logrus.NewEntry(l)
-
-	return conn
+	return conn, nil
 }
 
 func NewHook(protocol, address string) (*Hook, net.Conn, error) {
-
 	conn, err := net.Dial(protocol, address)
 	if err != nil {
-		log.Fatal(err)
+		logrus.Error("Error connecting LogDoc server, ", address, err)
+		return nil, nil, err
 	}
 
 	hook := &Hook{conn: conn, protocol: protocol, address: address}
@@ -219,4 +220,14 @@ func writeInt(in int) []byte {
 	buf.WriteByte(byte((in >> 8) & 0xff))
 	buf.WriteByte(byte(in & 0xff))
 	return buf.Bytes()
+}
+
+func GetSourceName(pc uintptr, file string, line int, ok bool) string {
+	// in skip if we're using 1, so it will actually log the where the error happened, 0 = this function
+	return file[strings.LastIndex(file, "/")+1:]
+}
+
+func GetSourceLineNum(pc uintptr, file string, line int, ok bool) int {
+	// in skip if we're using 1, so it will actually log the where the error happened, 0 = this function
+	return line
 }
