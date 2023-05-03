@@ -2,7 +2,7 @@ package zapld
 
 import (
 	"fmt"
-	"github.com/LogDoc-org/logdoc-go-appender/logdoc/common"
+	"github.com/LogDoc-org/logdoc-go-appender/common"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"log"
