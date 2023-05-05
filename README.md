@@ -1,3 +1,5 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/LogDoc-org/logdoc-go-appender)](https://goreportcard.com/report/github.com/LogDoc-org/logdoc-go-appender)
+
 # logdoc-go-appender
 
 ## Logdoc Go Appender v0.0.14
