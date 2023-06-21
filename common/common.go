@@ -2,6 +2,7 @@ package common
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 )
 
@@ -13,7 +14,7 @@ func WritePair(key string, value string, arr *[]byte) {
 	} else {
 		msg = value
 	}
-	if strings.Index(msg, "\n") != -1 {
+	if strings.Contains(msg, "\n") {
 		writeComplexPair(key, msg, arr)
 	} else {
 		writeSimplePair(key, msg, arr)
@@ -56,6 +57,10 @@ func writeInt(in int) []byte {
 	buf.WriteByte(byte((in >> 8) & 0xff))
 	buf.WriteByte(byte(in & 0xff))
 	return buf.Bytes()
+}
+
+func SourceNameWithLine(pc uintptr, file string, line int, ok bool) string {
+	return fmt.Sprintf("%s:%d", GetSourceName(pc, file, line, ok), line)
 }
 
 func GetSourceName(pc uintptr, file string, line int, ok bool) string {
