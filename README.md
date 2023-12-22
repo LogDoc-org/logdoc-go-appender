@@ -2,7 +2,7 @@
 
 # logdoc-go-appender
 
-## Logdoc Go Appender v0.0.14
+## Logdoc Go Appender v0.0.18
 
 ### Структурированные логи в GoLang
 [sirupsen/logrus](https://github.com/uber-go/zap) — один из самых популярных пакетов логирования, использующий структурированные логи JSON.
