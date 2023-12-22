@@ -116,13 +116,12 @@ func (h *Hook) sendMessage(entry *logrus.Entry) error {
 func Init(proto string, address string, app string) (net.Conn, error) {
 	l := logrus.New()
 	l.SetReportCaller(true)
-	l.Formatter = &logrus.TextFormatter{
+	l.Formatter = &logrus.JSONFormatter{
 		CallerPrettyfier: func(f *runtime.Frame) (string, string) {
 			filename := path.Base(f.File)
 			return fmt.Sprintf("%s:%d", filename, f.Line), fmt.Sprintf("%s()", f.Function)
 		},
-		DisableColors: false,
-		FullTimestamp: true,
+		TimestampFormat: "02-01-2006 15:04:05.00000",
 	}
 
 	l.SetLevel(logrus.DebugLevel)
@@ -145,7 +144,7 @@ func Init(proto string, address string, app string) (net.Conn, error) {
 func NewHook(protocol, address string) (*Hook, net.Conn, error) {
 	conn, err := net.Dial(protocol, address)
 	if err != nil {
-		logrus.Error("Error connecting LogDoc server, ", address, err)
+		logrus.Error("Error connecting LogDoc server, ", address, "; error:", err)
 		return nil, nil, err
 	}
 
