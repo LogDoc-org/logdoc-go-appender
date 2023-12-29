@@ -18,10 +18,10 @@ const defaultAsyncBufferSize = 8192
 
 var application string
 
-var lgr *logrus.Logger
+var log = logrus.StandardLogger()
 
 func GetLogger() *logrus.Logger {
-	return lgr
+	return log
 }
 
 type Hook struct {
@@ -114,9 +114,8 @@ func (h *Hook) sendMessage(entry *logrus.Entry) error {
 }
 
 func Init(proto string, address string, app string) (net.Conn, error) {
-	l := logrus.New()
-	l.SetReportCaller(true)
-	l.Formatter = &logrus.JSONFormatter{
+	log.SetReportCaller(true)
+	log.Formatter = &logrus.JSONFormatter{
 		CallerPrettyfier: func(f *runtime.Frame) (string, string) {
 			filename := path.Base(f.File)
 			return fmt.Sprintf("%s:%d", filename, f.Line), fmt.Sprintf("%s()", f.Function)
@@ -124,20 +123,16 @@ func Init(proto string, address string, app string) (net.Conn, error) {
 		TimestampFormat: "02-01-2006 15:04:05.00000",
 	}
 
-	l.SetLevel(logrus.DebugLevel)
+	log.SetLevel(logrus.DebugLevel)
 	application = app
-	lgr = l
 
 	hook, conn, err := NewHook(proto, address)
 	if err != nil {
-		l = logrus.StandardLogger()
-		l.SetLevel(logrus.DebugLevel)
-		lgr = l
-		lgr.Error(err)
+		log.Error(err)
 		return nil, err
 	}
 
-	l.AddHook(hook)
+	log.AddHook(hook)
 	return conn, nil
 }
 
