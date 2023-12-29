@@ -5,7 +5,6 @@ import (
 	"github.com/LogDoc-org/logdoc-go-appender/common"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"log"
 	"net"
 	"os"
 	"strconv"
@@ -15,12 +14,12 @@ import (
 
 var application string
 
-var lgr *zap.Logger
+var log = zap.Must(zap.NewProduction())
 
 var connection net.Conn
 
 func GetLogger() *zap.Logger {
-	return lgr
+	return log
 }
 
 // In contexts where performance is nice, but not critical, we are using the SugaredLogger.
@@ -55,13 +54,13 @@ func Init(config *zap.Config, initialLevel zapcore.Level, proto string, address 
 
 	logger, err := cfg.Build()
 	if err != nil {
-		log.Print("Ошибка создания конфигурации")
+		log.Error("Ошибка создания конфигурации")
 		return nil, err
 	}
 
 	conn, err := networkWriter(proto, address)
 	if err != nil {
-		log.Print("Ошибка соединения с LogDoc сервером")
+		log.Error("Ошибка соединения с LogDoc сервером")
 		return nil, err
 	}
 
@@ -72,7 +71,7 @@ func Init(config *zap.Config, initialLevel zapcore.Level, proto string, address 
 	logger.Info("LogDoc subsystem initialized successfully")
 
 	application = app
-	lgr = logger
+	log = logger
 
 	return logger, nil
 }
@@ -112,7 +111,7 @@ func sendLogDocEvent(entry zapcore.Entry) error {
 
 	_, err := connection.Write(result)
 	if err != nil {
-		log.Print("Ошибка записи в соединение, ", err)
+		log.Error("Ошибка записи в соединение, ", zap.Error(err))
 	}
 	return nil
 }
@@ -124,7 +123,7 @@ func networkWriter(proto string, address string) (net.Conn, error) {
 	case proto == "udp":
 		return udpWriter(address)
 	default:
-		log.Print("Error connecting LogDoc server, ", address)
+		log.Error("Error connecting LogDoc server, ", zap.String("address", address))
 		return nil, fmt.Errorf("error accessing LogDoc server, %s", address)
 	}
 }
@@ -133,7 +132,7 @@ func networkWriter(proto string, address string) (net.Conn, error) {
 func tcpWriter(address string) (net.Conn, error) {
 	conn, err := net.Dial("tcp", address)
 	if err != nil {
-		log.Print("Error connecting LogDoc server using tcp, ", address, err)
+		log.Error("Error connecting LogDoc server using tcp, ", zap.String("address", address), zap.Error(err))
 		return nil, err
 	}
 	return conn, nil
@@ -143,7 +142,7 @@ func tcpWriter(address string) (net.Conn, error) {
 func udpWriter(address string) (net.Conn, error) {
 	conn, err := net.Dial("udp", address)
 	if err != nil {
-		log.Print("Error connecting LogDoc server using udp, ", address, err)
+		log.Error("Error connecting LogDoc server using udp, ", zap.String("address", address), zap.Error(err))
 		return nil, err
 	}
 	return conn, nil
