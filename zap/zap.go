@@ -29,12 +29,13 @@ func GetLogger() *zap.Logger {
 // It's even faster than the SugaredLogger and allocates far less, but it only supports structured logging.
 // https://github.com/uber-go/zap
 
-func Init(config *zap.Config, initialLevel zapcore.Level, proto string, address string, app string) (*zap.Logger, error) {
+func Init(config *zap.Config, initialLevel zapcore.Level, proto string, address string, app string, development bool) (net.Conn, error) {
 	var cfg zap.Config
 
 	if config == nil {
 		// создаем конфигурацию логгера
 		cfg = zap.Config{
+			Development:      development,
 			Encoding:         "json",
 			Level:            zap.NewAtomicLevelAt(zap.DebugLevel),
 			OutputPaths:      []string{"stdout"},
@@ -50,6 +51,7 @@ func Init(config *zap.Config, initialLevel zapcore.Level, proto string, address 
 		}
 	} else {
 		cfg = *config
+		cfg.Level.SetLevel(initialLevel)
 	}
 
 	logger, err := cfg.Build()
@@ -73,7 +75,7 @@ func Init(config *zap.Config, initialLevel zapcore.Level, proto string, address 
 	application = app
 	log = logger
 
-	return logger, nil
+	return connection, nil
 }
 
 func sendLogDocEvent(entry zapcore.Entry) error {
