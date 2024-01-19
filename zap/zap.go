@@ -14,7 +14,7 @@ import (
 
 var application string
 
-var log = zap.Must(zap.NewProduction())
+var log *zap.Logger
 
 var connection net.Conn
 
@@ -37,7 +37,7 @@ func Init(config *zap.Config, initialLevel zapcore.Level, proto string, address 
 		cfg = zap.Config{
 			Development:      development,
 			Encoding:         "json",
-			Level:            zap.NewAtomicLevelAt(zap.DebugLevel),
+			Level:            zap.NewAtomicLevelAt(initialLevel),
 			OutputPaths:      []string{"stdout"},
 			ErrorOutputPaths: []string{"stderr"},
 			EncoderConfig: zapcore.EncoderConfig{
