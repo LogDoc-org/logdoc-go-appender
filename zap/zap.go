@@ -60,6 +60,11 @@ func Init(config *zap.Config, initialLevel zapcore.Level, proto string, address 
 		return nil, err
 	}
 
+	logger = logger.WithOptions(zap.Hooks(sendLogDocEvent))
+
+	application = app
+	log = logger
+
 	conn, err := networkWriter(proto, address)
 	if err != nil {
 		log.Error("Ошибка соединения с LogDoc сервером")
@@ -68,12 +73,7 @@ func Init(config *zap.Config, initialLevel zapcore.Level, proto string, address 
 
 	connection = conn
 
-	logger = logger.WithOptions(zap.Hooks(sendLogDocEvent))
-
 	logger.Info("LogDoc subsystem initialized successfully")
-
-	application = app
-	log = logger
 
 	return connection, nil
 }
